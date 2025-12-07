@@ -1,0 +1,76 @@
+#include <stdio.h>
+#include <string.h>
+
+#define MAX 100
+#define LINE 200
+#define FILE_NAME "document.txt"
+
+char undoStack[MAX][LINE];
+char redoStack[MAX][LINE];
+int utop = -1, rtop = -1;
+
+void saveFile() {
+    FILE *fp = fopen(FILE_NAME, "w");
+    if (!fp) return;
+    for (int i = 0; i <= utop; i++)
+        fprintf(fp, "%s\n", undoStack[i]);
+    fclose(fp);
+}
+
+void typeLine() {
+    if (utop == MAX - 1) {
+        printf("Buffer Full!\n");
+        return;
+    }
+    getchar();
+    printf("Enter text: ");
+    fgets(undoStack[++utop], LINE, stdin);
+    undoStack[utop][strcspn(undoStack[utop], "\n")] = 0;
+    rtop = -1;
+    saveFile();
+}
+
+void undo() {
+    if (utop < 0) {
+        printf("Nothing to Undo.\n");
+        return;
+    }
+    strcpy(redoStack[++rtop], undoStack[utop--]);
+    saveFile();
+}
+
+void redo() {
+    if (rtop < 0) {
+        printf("Nothing to Redo.\n");
+        return;
+    }
+    strcpy(undoStack[++utop], redoStack[rtop--]);
+    saveFile();
+}
+
+void showDoc() {
+    if (utop < 0) {
+        printf("Document Empty.\n");
+        return;
+    }
+    printf("\n--- Document ---\n");
+    for (int i = 0; i <= utop; i++)
+        printf("%s\n", undoStack[i]);
+}
+
+int main() {
+    int choice;
+    printf("Undo-Redo Text Editor\n");
+    while(1) {
+        printf("\n1) Type\n2) Undo\n3) Redo\n4) Show Document\n0) Exit\nChoose: ");
+        scanf("%d", &choice);
+
+        if(choice == 1) typeLine();
+        else if(choice == 2) undo();
+        else if(choice == 3) redo();
+        else if(choice == 4) showDoc();
+        else if(choice == 0) break;
+        else printf("Invalid Option\n");
+    }
+    return 0;
+}
